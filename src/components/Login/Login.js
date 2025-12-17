@@ -144,12 +144,7 @@ const Login = () => {
                             <img src={logo} alt="Logo" style={{ width: '90%', height: '90%', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
                         </Box>
                     </Box>
-                    <Box sx={{ mt: 2, fontSize: '1rem', color: '#1F2937', fontWeight: 600 }}>
-                        Don't Have an Account? <br />
-                        <Link href="/signup" underline="none" sx={{ color: '#2E8B57', fontSize: '1.25rem', fontWeight: 'bold', display: 'inline-block', mt: 1, '&:hover': { color: '#4CAF50', borderBottom: '1px solid #4CAF50' } }}>
-                            SignUp
-                        </Link>
-                    </Box>
+
                 </LeftSide>
 
                 {/* Right Side */}
