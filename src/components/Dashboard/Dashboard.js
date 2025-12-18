@@ -16,8 +16,7 @@ import {
     useMediaQuery,
     Container,
     Card,
-    CardActionArea,
-    CardContent
+    CardActionArea
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -31,10 +30,10 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
-// Assets
-import chartSales from '../../assets/chart_sales.png';
-import chartPaddy from '../../assets/chart_paddy.png';
-import chartSummary from '../../assets/chart_summary.png';
+// Charts
+import SalesGrowthChart from './charts/SalesGrowthChart';
+import PaddyStockChart from './charts/PaddyStockChart';
+import InventorySummaryChart from './charts/InventorySummaryChart';
 
 const drawerWidth = 92;
 
@@ -109,15 +108,6 @@ const ChartsShell = styled(Paper)(() => ({
     boxShadow: '0 12px 28px rgba(152, 251, 152, 0.30)',
 }));
 
-const ChartActionArea = styled(CardActionArea)(({ theme }) => ({
-    borderRadius: 16,
-    height: '100%',
-    transition: 'transform 0.3s ease-in-out',
-    '&:hover': {
-        transform: 'translateY(-5px)',
-    }
-}));
-
 const NavCard = styled(Card)(({ theme }) => ({
     borderRadius: 20,
     background: 'linear-gradient(135deg, #ffffff 0%, #f9fbe7 100%)', // Subtle gradient
@@ -150,13 +140,19 @@ const Dashboard = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [mobileOpen, setMobileOpen] = useState(false);
+
+    // Chart Data States
+    const [salesTrend, setSalesTrend] = useState([]);
+    const [paddyStock, setPaddyStock] = useState([]);
+    const [inventorySummary, setInventorySummary] = useState([]);
+
     const theme = useTheme();
     const isLg = useMediaQuery(theme.breakpoints.up('lg'));
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchData = async () => {
             const token = localStorage.getItem('token');
             if (!token) {
                 navigate('/');
@@ -164,26 +160,40 @@ const Dashboard = () => {
             }
 
             try {
-                const response = await fetch(`${API_URL}/users/profile`, {
+                // Fetch Profile
+                const profileRes = await fetch(`${API_URL}/users/profile`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    setUser(data);
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    setUser(profileData);
                 } else {
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
                     navigate('/');
+                    return;
                 }
+
+                // Fetch Chart Data
+                const [trendRes, paddyRes, summaryRes] = await Promise.all([
+                    fetch(`${API_URL}/reports/daily-trend`, { headers: { Authorization: `Bearer ${token}` } }),
+                    fetch(`${API_URL}/reports/paddy-stock`, { headers: { Authorization: `Bearer ${token}` } }),
+                    fetch(`${API_URL}/reports/inventory-summary`, { headers: { Authorization: `Bearer ${token}` } }),
+                ]);
+
+                if (trendRes.ok) setSalesTrend(await trendRes.json());
+                if (paddyRes.ok) setPaddyStock(await paddyRes.json());
+                if (summaryRes.ok) setInventorySummary(await summaryRes.json());
+
             } catch (error) {
-                console.error('Failed to fetch profile', error);
+                console.error('Failed to fetch dashboard data', error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchProfile();
+        fetchData();
     }, [navigate, API_URL]);
 
     const handleDrawerToggle = () => setMobileOpen((v) => !v);
@@ -321,37 +331,37 @@ const Dashboard = () => {
 
                     {/* Charts Grid */}
                     <ChartsShell sx={{ mb: 6 }}>
-                        <Grid container spacing={4} alignItems="center">
+                        <Grid container spacing={4} alignItems="center" sx={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexDirection: 'row' }}>
 
                             <Grid item xs={12} md={4}>
-                                <Box sx={{ textAlign: 'center' }}>
+                                <Box sx={{ textAlign: 'center', height: '100%', width: '100%' }}>
                                     <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: '#333' }}>
-                                        Sales Growth
+                                        Sales Growth (This Month)
                                     </Typography>
-                                    <Box sx={{ height: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                        <img src={chartSales} alt="Sales" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                                    <Box sx={{ height: 350 }}>
+                                        <SalesGrowthChart data={salesTrend} />
                                     </Box>
                                 </Box>
                             </Grid>
 
                             <Grid item xs={12} md={4} sx={{ borderLeft: { md: '1px solid #e0e0e0' }, borderRight: { md: '1px solid #e0e0e0' } }}>
-                                <Box sx={{ textAlign: 'center' }}>
+                                <Box sx={{ textAlign: 'center', height: '100%', width: '100%' }}>
                                     <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: '#333' }}>
-                                        Paddy Stock
+                                        Paddy Stock Levels
                                     </Typography>
-                                    <Box sx={{ height: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                        <img src={chartPaddy} alt="Paddy" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                                    <Box sx={{ height: 350 }}>
+                                        <PaddyStockChart data={paddyStock} />
                                     </Box>
                                 </Box>
                             </Grid>
 
                             <Grid item xs={12} md={4}>
-                                <Box sx={{ textAlign: 'center' }}>
+                                <Box sx={{ textAlign: 'center', height: '100%', width: '100%' }}>
                                     <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: '#333' }}>
-                                        Monthly Summary
+                                        Inventory Value Summary
                                     </Typography>
-                                    <Box sx={{ height: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                        <img src={chartSummary} alt="Summary" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                                    <Box sx={{ height: 350 }}>
+                                        <InventorySummaryChart data={inventorySummary} />
                                     </Box>
                                 </Box>
                             </Grid>

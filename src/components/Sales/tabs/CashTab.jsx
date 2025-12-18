@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Paper, TablePagination, TextField, IconButton, Dialog, DialogTitle,
-    DialogContent, DialogActions, Button, Typography
+    DialogContent, DialogActions, Button, Typography, Tooltip
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -10,6 +10,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import { toast } from 'react-toastify';
+
+import EditBillDialog from '../forms/EditBillDialog';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -29,6 +31,8 @@ const CashTab = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [selectedBill, setSelectedBill] = useState(null);
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [billToEdit, setBillToEdit] = useState(null);
     const [userRole, setUserRole] = useState('');
 
     useEffect(() => {
@@ -74,6 +78,23 @@ const CashTab = () => {
             }
         } catch (err) {
             console.error(err);
+        }
+    };
+
+    const handleEditBill = async (billId) => {
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`${API_URL}/bills/${billId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setBillToEdit(data);
+                setEditDialogOpen(true);
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Error fetching bill details");
         }
     };
 
@@ -158,18 +179,31 @@ const CashTab = () => {
                                 <TableCell align="center">Rs. {bill.net_price}</TableCell>
                                 <TableCell align="center">{new Date(bill.created_at).toLocaleDateString()}</TableCell>
                                 <TableCell align="center">
-                                    <IconButton onClick={() => handleExpandBill(bill.id)} color="primary" size="small" title="View Details">
-                                        <VisibilityIcon />
-                                    </IconButton>
-                                    {!bill.is_paid && (
-                                        <IconButton onClick={() => handleMarkAsPaid(bill.id, bill.is_paid)} color="success" size="small" title="Mark as Paid">
-                                            <CheckCircleIcon />
+                                    <Tooltip title="View Details">
+                                        <IconButton onClick={() => handleExpandBill(bill.id)} color="primary" size="small">
+                                            <VisibilityIcon />
                                         </IconButton>
+                                    </Tooltip>
+
+                                    <Tooltip title="Edit Bill">
+                                        <IconButton onClick={() => handleEditBill(bill.id)} color="warning" size="small">
+                                            <EditIcon />
+                                        </IconButton>
+                                    </Tooltip>
+
+                                    {!bill.is_paid && (
+                                        <Tooltip title="Mark as Paid">
+                                            <IconButton onClick={() => handleMarkAsPaid(bill.id, bill.is_paid)} color="success" size="small">
+                                                <CheckCircleIcon />
+                                            </IconButton>
+                                        </Tooltip>
                                     )}
                                     {userRole === 'owner' && (
-                                        <IconButton onClick={() => handleDeleteBill(bill.id)} color="error" size="small" title="Delete">
-                                            <DeleteIcon />
-                                        </IconButton>
+                                        <Tooltip title="Delete">
+                                            <IconButton onClick={() => handleDeleteBill(bill.id)} color="error" size="small">
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Tooltip>
                                     )}
                                 </TableCell>
                             </TableRow>
@@ -234,6 +268,14 @@ const CashTab = () => {
                     <Button onClick={() => setDialogOpen(false)}>Close</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Edit Bill Dialog */}
+            <EditBillDialog
+                open={editDialogOpen}
+                onClose={() => setEditDialogOpen(false)}
+                bill={billToEdit}
+                onUpdate={fetchBills}
+            />
         </Box>
     );
 };

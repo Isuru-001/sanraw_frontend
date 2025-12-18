@@ -14,6 +14,8 @@ import LoginHistory from './components/LoginHistory/LoginHistory';
 import SplashScreen from './components/SplashScreen/SplashScreen';
 import { useState } from 'react';
 
+import Reports from './components/Reports/Reports';
+
 function App() {
   const [loading, setLoading] = useState(() => {
     return !sessionStorage.getItem('splashShown');
@@ -41,6 +43,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/login-history" element={<LoginHistory />} />
+            <Route path="/reports" element={<Reports />} />
           </Routes>
         </>
       )}
