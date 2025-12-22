@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -16,7 +16,21 @@ import {
     useMediaQuery,
     Container,
     Card,
-    CardActionArea
+    CardActionArea,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    TextField,
+    InputAdornment,
+    List as MuiList,
+    ListItem,
+    ListItemText,
+    Badge,
+    Menu,
+    MenuItem,
+    Switch,
+    FormControlLabel,
+    Divider
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -26,9 +40,15 @@ import {
     Inventory as InventoryIcon,
     People as PeopleIcon,
     ReceiptLong as ReceiptIcon,
-    Assessment as AssessmentIcon
+    Assessment as AssessmentIcon,
+    Close as CloseIcon,
+    DarkMode as DarkModeIcon,
+    LightMode as LightModeIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+
+// Context
+import { ThemeContext } from '../../context/ThemeContext';
 
 // Charts
 import SalesGrowthChart from './charts/SalesGrowthChart';
@@ -42,7 +62,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({
     flexGrow: 1,
     padding: theme.spacing(3),
     marginLeft: 0,
-    backgroundColor: '#FFFFFF', // Clean white background
+    backgroundColor: theme.palette.background.default,
     minHeight: '100vh',
     [theme.breakpoints.up('lg')]: {
         marginLeft: `${drawerWidth}px`,
@@ -61,14 +81,14 @@ const StyledDrawer = styled(Drawer)(({ theme }) => ({
     },
 }));
 
-const SidebarShell = styled(Paper)(() => ({
+const SidebarShell = styled(Paper)(({ theme }) => ({
     height: 'calc(100vh - 32px)',
     marginTop: 8,
     marginBottom: 8,
     borderRadius: 26,
-    border: '2px solid #CFF3DD',
-    backgroundColor: '#FFFFFF',
-    boxShadow: '0 8px 18px rgba(0,0,0,0.06)',
+    border: `2px solid ${theme.palette.mode === 'dark' ? '#333' : '#CFF3DD'}`,
+    backgroundColor: theme.palette.background.paper,
+    boxShadow: theme.shadows[4],
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -83,71 +103,81 @@ const SidebarList = styled(List)(() => ({
     gap: 28,
 }));
 
-const IconCircle = styled(Box)(() => ({
+const IconCircle = styled(Box)(({ theme }) => ({
     width: 52,
     height: 52,
     borderRadius: 18,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    border: '2px solid #CFF3DD',
-    boxShadow: '0 6px 14px rgba(152, 251, 152, 0.18)',
-    background: '#FFFFFF',
+    border: `2px solid ${theme.palette.mode === 'dark' ? '#333' : '#CFF3DD'}`,
+    boxShadow: theme.shadows[2],
+    background: theme.palette.background.paper,
     transition: 'all 0.3s ease',
     '&:hover': {
         transform: 'scale(1.1)',
-        backgroundColor: '#f1f8e9'
+        backgroundColor: theme.palette.action.hover
     }
 }));
 
-const ChartsShell = styled(Paper)(() => ({
+const ChartsShell = styled(Paper)(({ theme }) => ({
     borderRadius: 26,
-    border: '3px solid #A7EFC3',
-    background: '#FFFFFF',
+    border: `3px solid ${theme.palette.mode === 'dark' ? '#333' : '#A7EFC3'}`,
+    background: theme.palette.background.paper,
     padding: 28,
-    boxShadow: '0 12px 28px rgba(152, 251, 152, 0.30)',
+    boxShadow: theme.shadows[3],
 }));
 
 const NavCard = styled(Card)(({ theme }) => ({
     borderRadius: 20,
-    background: 'linear-gradient(135deg, #ffffff 0%, #f9fbe7 100%)', // Subtle gradient
-    border: '1px solid #CFF3DD',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+    background: theme.palette.mode === 'dark'
+        ? 'linear-gradient(135deg, #1e1e1e 0%, #2c2c2c 100%)'
+        : 'linear-gradient(135deg, #ffffff 0%, #f9fbe7 100%)',
+    border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#CFF3DD'}`,
+    boxShadow: theme.shadows[1],
     transition: 'all 0.3s ease',
     height: '100%',
     '&:hover': {
         transform: 'translateY(-5px)',
-        boxShadow: '0 8px 20px rgba(152, 251, 152, 0.4)',
-        borderColor: '#98FB98',
+        boxShadow: theme.shadows[4],
+        borderColor: theme.palette.primary.main,
     }
 }));
 
-const NavIconBox = styled(Box)(() => ({
+const NavIconBox = styled(Box)(({ theme }) => ({
     width: 60,
     height: 60,
     borderRadius: '50%',
-    backgroundColor: '#e8f5e9',
+    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(76, 175, 80, 0.1)' : '#e8f5e9',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-    color: '#388e3c'
+    color: theme.palette.primary.main
 }));
 
 // ---------- Component ----------
 const Dashboard = () => {
     const navigate = useNavigate();
+    const themeContext = useContext(ThemeContext);
+    const theme = useTheme();
+    const isLg = useMediaQuery(theme.breakpoints.up('lg'));
+
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [mobileOpen, setMobileOpen] = useState(false);
 
-    // Chart Data States
+    // Chart & Notification data
     const [salesTrend, setSalesTrend] = useState([]);
     const [paddyStock, setPaddyStock] = useState([]);
     const [inventorySummary, setInventorySummary] = useState([]);
+    const [lowStockItems, setLowStockItems] = useState([]);
 
-    const theme = useTheme();
-    const isLg = useMediaQuery(theme.breakpoints.up('lg'));
+    // UI States
+    const [searchOpen, setSearchOpen] = useState(false);
+    const [searchValue, setSearchValue] = useState('');
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [anchorElNotif, setAnchorElNotif] = useState(null);
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -176,15 +206,22 @@ const Dashboard = () => {
                 }
 
                 // Fetch Chart Data
-                const [trendRes, paddyRes, summaryRes] = await Promise.all([
+                const [trendRes, paddyRes, summaryRes, invRes] = await Promise.all([
                     fetch(`${API_URL}/reports/daily-trend`, { headers: { Authorization: `Bearer ${token}` } }),
                     fetch(`${API_URL}/reports/paddy-stock`, { headers: { Authorization: `Bearer ${token}` } }),
                     fetch(`${API_URL}/reports/inventory-summary`, { headers: { Authorization: `Bearer ${token}` } }),
+                    fetch(`${API_URL}/reports/inventory-report`, { headers: { Authorization: `Bearer ${token}` } }) // For search
                 ]);
 
                 if (trendRes.ok) setSalesTrend(await trendRes.json());
                 if (paddyRes.ok) setPaddyStock(await paddyRes.json());
                 if (summaryRes.ok) setInventorySummary(await summaryRes.json());
+
+                // Process notifications & search data
+                if (invRes.ok) {
+                    const invData = await invRes.json();
+                    setLowStockItems(invData.filter(i => i.stock < 10));
+                }
 
             } catch (error) {
                 console.error('Failed to fetch dashboard data', error);
@@ -198,10 +235,18 @@ const Dashboard = () => {
 
     const handleDrawerToggle = () => setMobileOpen((v) => !v);
 
+    // Handlers
+    const handleSearchOpen = () => setSearchOpen(true);
+    const handleSearchClose = () => setSearchOpen(false);
+    const handleSettingsOpen = () => setSettingsOpen(true);
+    const handleSettingsClose = () => setSettingsOpen(false);
+    const handleNotifClick = (event) => setAnchorElNotif(event.currentTarget);
+    const handleNotifClose = () => setAnchorElNotif(null);
+
     const drawerContent = (
         <SidebarShell elevation={0}>
             <SidebarList>
-                <ListItemButton sx={{ p: 0, justifyContent: 'center' }}>
+                <ListItemButton sx={{ p: 0, justifyContent: 'center' }} onClick={handleSearchOpen}>
                     <ListItemIcon sx={{ minWidth: 0 }}>
                         <IconCircle>
                             <SearchIcon sx={{ fontSize: 30, color: '#3FAE64' }} />
@@ -209,15 +254,17 @@ const Dashboard = () => {
                     </ListItemIcon>
                 </ListItemButton>
 
-                <ListItemButton sx={{ p: 0, justifyContent: 'center' }}>
+                <ListItemButton sx={{ p: 0, justifyContent: 'center' }} onClick={handleNotifClick}>
                     <ListItemIcon sx={{ minWidth: 0 }}>
-                        <IconCircle>
-                            <NotificationsIcon sx={{ fontSize: 30, color: '#3FAE64' }} />
-                        </IconCircle>
+                        <Badge badgeContent={lowStockItems.length} color="error">
+                            <IconCircle>
+                                <NotificationsIcon sx={{ fontSize: 30, color: '#3FAE64' }} />
+                            </IconCircle>
+                        </Badge>
                     </ListItemIcon>
                 </ListItemButton>
 
-                <ListItemButton sx={{ p: 0, justifyContent: 'center' }}>
+                <ListItemButton sx={{ p: 0, justifyContent: 'center' }} onClick={handleSettingsOpen}>
                     <ListItemIcon sx={{ minWidth: 0 }}>
                         <IconCircle>
                             <SettingsIcon sx={{ fontSize: 30, color: '#3FAE64' }} />
@@ -246,7 +293,7 @@ const Dashboard = () => {
     ];
 
     return (
-        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#FFFFFF' }}>
+        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
             {/* Mobile Hamburger */}
             {!isLg && (
                 <IconButton
@@ -256,10 +303,10 @@ const Dashboard = () => {
                         top: 16,
                         left: 16,
                         zIndex: 1400,
-                        color: '#3FAE64',
-                        bgcolor: '#FFFFFF',
+                        color: 'primary.main',
+                        bgcolor: 'background.paper',
                         border: '2px solid #CFF3DD',
-                        boxShadow: '0 10px 18px rgba(0,0,0,0.08)',
+                        boxShadow: 3,
                         borderRadius: 3,
                     }}
                 >
@@ -298,7 +345,7 @@ const Dashboard = () => {
                                 sx={{
                                     fontSize: { xs: '2.0rem', md: '2.5rem' },
                                     fontWeight: 800,
-                                    color: '#2e7d32', // Darker green for contrast
+                                    color: theme.palette.mode === 'dark' ? 'primary.light' : '#2e7d32',
                                     letterSpacing: '-0.5px'
                                 }}
                             >
@@ -308,7 +355,7 @@ const Dashboard = () => {
                                 sx={{
                                     mt: 1,
                                     fontSize: { xs: '1.0rem', md: '1.2rem' },
-                                    color: '#757575',
+                                    color: 'text.secondary',
                                     fontWeight: 500
                                 }}
                             >
@@ -319,7 +366,7 @@ const Dashboard = () => {
                         <Box sx={{
                             borderRadius: '50%',
                             p: 0.5,
-                            border: '3px solid #4CAF50',
+                            border: `3px solid ${theme.palette.primary.main}`,
                             boxShadow: '0 4px 14px rgba(76, 175, 80, 0.3)',
                             cursor: 'pointer'
                         }}
@@ -332,10 +379,9 @@ const Dashboard = () => {
                     {/* Charts Grid */}
                     <ChartsShell sx={{ mb: 6 }}>
                         <Grid container spacing={4} alignItems="center" sx={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexDirection: 'row' }}>
-
                             <Grid item xs={12} md={4}>
                                 <Box sx={{ textAlign: 'center', height: '100%', width: '100%' }}>
-                                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: '#333' }}>
+                                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: 'text.primary' }}>
                                         Sales Growth (This Month)
                                     </Typography>
                                     <Box sx={{ height: 350 }}>
@@ -344,9 +390,9 @@ const Dashboard = () => {
                                 </Box>
                             </Grid>
 
-                            <Grid item xs={12} md={4} sx={{ borderLeft: { md: '1px solid #e0e0e0' }, borderRight: { md: '1px solid #e0e0e0' } }}>
+                            <Grid item xs={12} md={4} sx={{ borderLeft: { md: `1px solid ${theme.palette.divider}` }, borderRight: { md: `1px solid ${theme.palette.divider}` } }}>
                                 <Box sx={{ textAlign: 'center', height: '100%', width: '100%' }}>
-                                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: '#333' }}>
+                                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: 'text.primary' }}>
                                         Paddy Stock Levels
                                     </Typography>
                                     <Box sx={{ height: 350 }}>
@@ -357,7 +403,7 @@ const Dashboard = () => {
 
                             <Grid item xs={12} md={4}>
                                 <Box sx={{ textAlign: 'center', height: '100%', width: '100%' }}>
-                                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: '#333' }}>
+                                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: 'text.primary' }}>
                                         Inventory Value Summary
                                     </Typography>
                                     <Box sx={{ height: 350 }}>
@@ -365,12 +411,11 @@ const Dashboard = () => {
                                     </Box>
                                 </Box>
                             </Grid>
-
                         </Grid>
                     </ChartsShell>
 
                     {/* Quick Access Navigation */}
-                    <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, color: '#333' }}>
+                    <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, color: 'text.primary' }}>
                         Quick Access
                     </Typography>
 
@@ -395,8 +440,158 @@ const Dashboard = () => {
 
                 </Container>
             </Main>
+
+            {/* --- Dialogs --- */}
+
+            {/* Search Dialog */}
+            <Dialog open={searchOpen} onClose={handleSearchClose} fullWidth maxWidth="sm">
+                <DialogTitle>Quick Search</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Search Products (Coming Soon: Customers)"
+                        type="text"
+                        fullWidth
+                        variant="outlined"
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
+                    <Box sx={{ mt: 2 }}>
+                        {searchValue && (
+                            <Typography variant="body2" color="text.secondary">
+                                Results will appear here... (Mockup)
+                            </Typography>
+                        )}
+                    </Box>
+                </DialogContent>
+            </Dialog>
+
+            {/* Settings Dialog */}
+            <Dialog open={settingsOpen} onClose={handleSettingsClose} fullWidth maxWidth="xs">
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Settings
+                    <IconButton onClick={handleSettingsClose}><CloseIcon /></IconButton>
+                </DialogTitle>
+                <DialogContent dividers>
+                    {/* Dark Mode */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {theme.palette.mode === 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
+                            <Box>
+                                <Typography variant="subtitle1">Dark Mode</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Adjust the appearance
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Switch
+                            checked={theme.palette.mode === 'dark'}
+                            onChange={themeContext.toggleColorMode}
+                        />
+                    </Box>
+                    <Divider />
+
+                    {/* Notifications removed as requested */}
+
+                    {/* Profile Link */}
+                    <Box
+                        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2, cursor: 'pointer' }}
+                        onClick={() => { navigate('/profile'); handleSettingsClose(); }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <PeopleIcon />
+                            <Box>
+                                <Typography variant="subtitle1">Edit Profile</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Manage personal details
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Typography variant="body2" color="primary">Open</Typography>
+                    </Box>
+                    <Divider />
+
+                    {/* Data Backup */}
+                    <Box
+                        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2, cursor: 'pointer' }}
+                        onClick={() => { alert('Backup started...'); handleSettingsClose(); }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <InventoryIcon /> {/* Recycling icon for backup */}
+                            <Box>
+                                <Typography variant="subtitle1">Backup Data</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Download local backup
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Typography variant="body2" color="success.main">Download</Typography>
+                    </Box>
+                    <Divider />
+
+                    {/* Help & Support */}
+                    <Box
+                        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <AssessmentIcon /> {/* Using info-like icon */}
+                            <Box>
+                                <Typography variant="subtitle1">Help & Support</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Contact System Admin
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">077-1234567</Typography>
+                    </Box>
+
+
+                    <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
+                        App Version 1.2.0 (Pro)
+                    </Typography>
+                </DialogContent>
+            </Dialog>
+
+            {/* Notification Menu */}
+            <Menu
+                anchorEl={anchorElNotif}
+                open={Boolean(anchorElNotif)}
+                onClose={handleNotifClose}
+                PaperProps={{
+                    style: { maxHeight: 300, width: '300px' }
+                }}
+            >
+                <Typography variant="subtitle1" sx={{ px: 2, py: 1, fontWeight: 'bold' }}>
+                    Notifications
+                </Typography>
+                <Divider />
+                {lowStockItems.length === 0 ? (
+                    <MenuItem onClick={handleNotifClose}>No new notifications</MenuItem>
+                ) : (
+                    lowStockItems.map((item, idx) => (
+                        <MenuItem key={idx} onClick={() => { navigate('/inventory'); handleNotifClose(); }}>
+                            <Box>
+                                <Typography variant="body2" color="error" fontWeight="bold">
+                                    Low Stock Alert: {item.name}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Only {item.stock} items remaining.
+                                </Typography>
+                            </Box>
+                        </MenuItem>
+                    ))
+                )}
+            </Menu>
+
         </Box>
     );
 };
-
 export default Dashboard;

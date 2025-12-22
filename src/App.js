@@ -16,6 +16,8 @@ import { useState } from 'react';
 
 import Reports from './components/Reports/Reports';
 
+import { ColorModeProvider } from './context/ThemeContext';
+
 function App() {
   const [loading, setLoading] = useState(() => {
     return !sessionStorage.getItem('splashShown');
@@ -27,27 +29,29 @@ function App() {
   };
 
   return (
-    <div className="App">
-      {loading ? (
-        <SplashScreen onFinish={handleSplashFinish} />
-      ) : (
-        <>
-          <ToastContainer position="top-right" autoClose={3000} />
-          <Routes>
-            <Route path="/" element={<Login />} />
-            {/* <Route path="/signup" element={<Signup />} /> */}
-            <Route path="/forgot" element={<ForgotPassword />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/sales" element={<Sales />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/employees" element={<Employees />} />
-            <Route path="/login-history" element={<LoginHistory />} />
-            <Route path="/reports" element={<Reports />} />
-          </Routes>
-        </>
-      )}
-    </div>
+    <ColorModeProvider>
+      <div className="App">
+        {loading ? (
+          <SplashScreen onFinish={handleSplashFinish} />
+        ) : (
+          <>
+            <ToastContainer position="top-right" autoClose={3000} />
+            <Routes>
+              <Route path="/" element={<Login />} />
+              {/* <Route path="/signup" element={<Signup />} /> */}
+              <Route path="/forgot" element={<ForgotPassword />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/sales" element={<Sales />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/employees" element={<Employees />} />
+              <Route path="/login-history" element={<LoginHistory />} />
+              <Route path="/reports" element={<Reports />} />
+            </Routes>
+          </>
+        )}
+      </div>
+    </ColorModeProvider>
   );
 }
 
