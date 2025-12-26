@@ -8,15 +8,15 @@ import CashTab from './tabs/CashTab';
 import CreditTab from './tabs/CreditTab';
 import RecentBillTab from './tabs/RecentBillTab';
 
-const StyledTab = styled(Tab)({
+const StyledTab = styled(Tab)(({ theme }) => ({
     textTransform: 'none',
     fontWeight: 'bold',
     fontSize: '1.2rem',
-    color: '#aaa',
+    color: theme.palette.text.secondary,
     '&.Mui-selected': {
-        color: '#4CAF50',
+        color: theme.palette.primary.main,
     },
-});
+}));
 
 const Sales = () => {
     const navigate = useNavigate();
@@ -27,17 +27,17 @@ const Sales = () => {
     };
 
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: '#fff', p: 3 }}>
+        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', p: 3 }}>
             {/* Header / Back Button */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                 <IconButton onClick={() => navigate('/dashboard')}>
-                    <ArrowBackIcon sx={{ fontSize: 30, color: '#333' }} />
+                    <ArrowBackIcon sx={{ fontSize: 30, color: 'text.primary' }} />
                 </IconButton>
                 {/* No Profile Icon as requested */}
             </Box>
 
             {/* Top Tabs */}
-            <Box sx={{ bgcolor: '#f0fff4', borderRadius: '10px', mb: 4, py: 1 }}>
+            <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', mb: 4, py: 1 }}>
                 <Tabs
                     value={tabValue}
                     onChange={handleTabChange}
@@ -47,11 +47,12 @@ const Sales = () => {
                         '& .MuiTab-root': {
                             mx: 2,
                             fontSize: '1.2rem',
+                            fontSize: '1.2rem',
                             fontWeight: 'bold',
-                            color: '#aaa',
+                            color: 'text.secondary',
                         },
                         '& .Mui-selected': {
-                            color: '#4CAF50',
+                            color: 'primary.main',
                         }
                     }}
                 >

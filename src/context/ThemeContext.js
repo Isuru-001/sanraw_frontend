@@ -37,6 +37,7 @@ export const ColorModeProvider = ({ children }) => {
                             secondary: { main: '#8bc34a' },
                             background: { default: '#FFFFFF', paper: '#F5F5F5' },
                             text: { primary: '#212121', secondary: '#757575' },
+                            divider: '#e0e0e0',
                         }
                         : {
                             // Dark Mode Palette
@@ -44,6 +45,7 @@ export const ColorModeProvider = ({ children }) => {
                             secondary: { main: '#aed581' },
                             background: { default: '#121212', paper: '#1e1e1e' },
                             text: { primary: '#ffffff', secondary: '#b0bec5' },
+                            divider: 'rgba(255, 255, 255, 0.12)',
                         }),
                 },
                 components: {

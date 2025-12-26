@@ -12,6 +12,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { toast } from 'react-toastify';
 
 import EditBillDialog from '../forms/EditBillDialog';
+import ConfirmationDialog from '../../common/ConfirmationDialog';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -34,6 +35,8 @@ const CashTab = () => {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [billToEdit, setBillToEdit] = useState(null);
     const [userRole, setUserRole] = useState('');
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [billToDelete, setBillToDelete] = useState(null);
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -98,12 +101,17 @@ const CashTab = () => {
         }
     };
 
-    const handleDeleteBill = async (billId) => {
-        if (!window.confirm('Are you sure you want to delete this bill?')) return;
+    const handleDeleteClick = (billId) => {
+        setBillToDelete(billId);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!billToDelete) return;
 
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`${API_URL}/bills/${billId}`, {
+            const res = await fetch(`${API_URL}/bills/${billToDelete}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -116,6 +124,9 @@ const CashTab = () => {
         } catch (err) {
             console.error(err);
             toast.error('Error deleting bill');
+        } finally {
+            setDeleteDialogOpen(false);
+            setBillToDelete(null);
         }
     };
 
@@ -200,7 +211,7 @@ const CashTab = () => {
                                     )}
                                     {userRole === 'owner' && (
                                         <Tooltip title="Delete">
-                                            <IconButton onClick={() => handleDeleteBill(bill.id)} color="error" size="small">
+                                            <IconButton onClick={() => handleDeleteClick(bill.id)} color="error" size="small">
                                                 <DeleteIcon />
                                             </IconButton>
                                         </Tooltip>
@@ -275,6 +286,14 @@ const CashTab = () => {
                 onClose={() => setEditDialogOpen(false)}
                 bill={billToEdit}
                 onUpdate={fetchBills}
+            />
+
+            <ConfirmationDialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Delete Bill"
+                content="Are you sure you want to delete this bill? This action cannot be undone."
             />
         </Box>
     );

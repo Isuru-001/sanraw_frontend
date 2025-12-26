@@ -9,6 +9,7 @@ import EquipmentForm from './EquipmentForm';
 import ChemicalsForm from './ChemicalsForm';
 import PaddyForm from './PaddyForm';
 import { toast } from 'react-toastify';
+import ConfirmationDialog from '../../common/ConfirmationDialog';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -23,6 +24,8 @@ const EditBillDialog = ({ open, onClose, bill, onUpdate }) => {
     const [subTabValue, setSubTabValue] = useState(0);
     const [billItems, setBillItems] = useState([]);
     const [customerDetails, setCustomerDetails] = useState({ name: '', address: '', phone: '' });
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [itemIndexToDelete, setItemIndexToDelete] = useState(null);
 
     useEffect(() => {
         if (bill) {
@@ -64,8 +67,17 @@ const EditBillDialog = ({ open, onClose, bill, onUpdate }) => {
         setBillItems([...billItems, { ...item, id: Date.now() }]);
     };
 
-    const handleDeleteItem = (indexToRemove) => {
-        setBillItems(billItems.filter((_, index) => index !== indexToRemove));
+    const handleDeleteItemClick = (index) => {
+        setItemIndexToDelete(index);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (itemIndexToDelete !== null) {
+            setBillItems(billItems.filter((_, index) => index !== itemIndexToDelete));
+        }
+        setDeleteDialogOpen(false);
+        setItemIndexToDelete(null);
     };
 
     const handleQuantityChange = (index, newQty) => {
@@ -180,7 +192,7 @@ const EditBillDialog = ({ open, onClose, bill, onUpdate }) => {
                                     <Box sx={{ flex: 1, textAlign: 'right', mr: 2 }}>
                                         <Typography variant="body2" fontWeight="bold">{item.extPrice}</Typography>
                                     </Box>
-                                    <IconButton size="small" color="error" onClick={() => handleDeleteItem(index)}>
+                                    <IconButton size="small" color="error" onClick={() => handleDeleteItemClick(index)}>
                                         <DeleteIcon fontSize="small" />
                                     </IconButton>
                                 </Box>
@@ -210,6 +222,14 @@ const EditBillDialog = ({ open, onClose, bill, onUpdate }) => {
                 <Button onClick={onClose} color="inherit">Cancel</Button>
                 <Button onClick={handleSave} variant="contained" color="primary">Save Changes</Button>
             </DialogActions>
+
+            <ConfirmationDialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Remove Item"
+                content="Are you sure you want to remove this item from the bill?"
+            />
         </Dialog>
     );
 };

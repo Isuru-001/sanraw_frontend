@@ -65,7 +65,7 @@ const CreateAccount = ({ onAccountCreated }) => {
             const data = await response.json();
 
             if (response.ok) {
-                toast.success("Employee account created successfully!");
+                toast.success("Account created. Please check email to activate.");
                 // Clear form
                 setFirstName('');
                 setLastName('');

@@ -11,6 +11,7 @@ import Inventory from './components/Inventory/Inventory';
 import Profile from './components/Profile/Profile';
 import Employees from './components/Employees/Employees';
 import LoginHistory from './components/LoginHistory/LoginHistory';
+import ActivateAccount from './components/Auth/ActivateAccount';
 import SplashScreen from './components/SplashScreen/SplashScreen';
 import { useState } from 'react';
 
@@ -40,6 +41,7 @@ function App() {
               <Route path="/" element={<Login />} />
               {/* <Route path="/signup" element={<Signup />} /> */}
               <Route path="/forgot" element={<ForgotPassword />} />
+              <Route path="/activate/:token" element={<ActivateAccount />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/inventory" element={<Inventory />} />

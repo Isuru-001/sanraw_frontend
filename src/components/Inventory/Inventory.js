@@ -13,38 +13,39 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { toast } from 'react-toastify';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ConfirmationDialog from '../common/ConfirmationDialog';
 
 // --- Styled Components ---
 const StyledPaper = styled(Paper)(({ theme }) => ({
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: theme.palette.background.paper,
     backdropFilter: 'blur(10px)',
     borderRadius: '20px',
     boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-    border: '1px solid rgba(255, 255, 255, 0.18)',
+    border: `1px solid ${theme.palette.divider}`,
     padding: theme.spacing(3),
     marginTop: theme.spacing(4)
 }));
 
 const GreenRow = styled(TableRow)(({ theme }) => ({
-    backgroundColor: '#e8f5e9', // Light green
-    '&:hover': { backgroundColor: '#c8e6c9' }
+    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(76, 175, 80, 0.1)' : '#e8f5e9', // Light green
+    '&:hover': { backgroundColor: theme.palette.mode === 'dark' ? 'rgba(76, 175, 80, 0.2)' : '#c8e6c9' }
 }));
 
 const NormalRow = styled(TableRow)(({ theme }) => ({
-    '&:hover': { backgroundColor: '#f5f5f5' }
+    '&:hover': { backgroundColor: theme.palette.action.hover }
 }));
 
 const ActionButton = styled(IconButton)(({ theme }) => ({
-    color: '#2e7d32',
-    '&:hover': { backgroundColor: '#e8f5e9' }
+    color: theme.palette.primary.main,
+    '&:hover': { backgroundColor: theme.palette.action.hover }
 }));
 
-const CustomTab = styled(Tab)({
+const CustomTab = styled(Tab)(({ theme }) => ({
     fontWeight: 'bold',
     textTransform: 'none',
     fontSize: '1rem',
-    '&.Mui-selected': { color: '#2e7d32' }
-});
+    '&.Mui-selected': { color: theme.palette.primary.main }
+}));
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -71,6 +72,8 @@ const Inventory = () => {
     // Edit/Delete State
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
     const [userRole, setUserRole] = useState('');
 
     // Get user role on mount
@@ -204,14 +207,20 @@ const Inventory = () => {
     };
 
     // --- Delete Inventory ---
-    const handleDelete = async (item) => {
-        if (!window.confirm(`Are you sure you want to delete this item?`)) return;
+    // --- Delete Inventory ---
+    const handleDeleteClick = (item) => {
+        setItemToDelete(item);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!itemToDelete) return;
 
         const token = localStorage.getItem('token');
         let endpoint = '';
-        if (categoryTab === 'paddy') endpoint = `/paddy/${item.id}`;
-        else if (categoryTab === 'equipment') endpoint = `/equipment/${item.id}`;
-        else if (categoryTab === 'chemicals') endpoint = `/chemicals/${item.id}`;
+        if (categoryTab === 'paddy') endpoint = `/paddy/${itemToDelete.id}`;
+        else if (categoryTab === 'equipment') endpoint = `/equipment/${itemToDelete.id}`;
+        else if (categoryTab === 'chemicals') endpoint = `/chemicals/${itemToDelete.id}`;
 
         try {
             const res = await fetch(`${API_URL}${endpoint}`, {
@@ -228,6 +237,9 @@ const Inventory = () => {
         } catch (err) {
             console.error(err);
             toast.error("Error deleting item");
+        } finally {
+            setDeleteDialogOpen(false);
+            setItemToDelete(null);
         }
     };
     // --- Renderers ---
@@ -268,7 +280,7 @@ const Inventory = () => {
                                 <EditIcon />
                             </ActionButton>
                             {userRole === 'owner' && (
-                                <ActionButton onClick={() => handleDelete(row)} title="Delete" sx={{ color: '#d32f2f' }}>
+                                <ActionButton onClick={() => handleDeleteClick(row)} title="Delete" sx={{ color: '#d32f2f' }}>
                                     <DeleteIcon />
                                 </ActionButton>
                             )}
@@ -280,7 +292,7 @@ const Inventory = () => {
 
     const renderAddForm = () => (
         <StyledPaper sx={{ maxWidth: 600, mx: 'auto' }}>
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: '#2e7d32', textAlign: 'center' }}>
+            <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
                 Add New {categoryTab.charAt(0).toUpperCase() + categoryTab.slice(1)}
             </Typography>
             <form onSubmit={handleAddSubmit}>
@@ -302,7 +314,7 @@ const Inventory = () => {
                         <TextField required type="date" label="Expire Date" InputLabelProps={{ shrink: true }} fullWidth value={formData.expire_date} onChange={(e) => setFormData({ ...formData, expire_date: e.target.value })} />
                     }
 
-                    <Button type="submit" variant="contained" size="large" sx={{ bgcolor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' } }}>
+                    <Button type="submit" variant="contained" size="large" sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}>
                         Add Item
                     </Button>
                 </Stack>
@@ -311,13 +323,13 @@ const Inventory = () => {
     );
 
     return (
-        <Box sx={{ minHeight: '100vh', padding: 3, backgroundColor: '#f8fff8' }}>
+        <Box sx={{ minHeight: '100vh', padding: 3, backgroundColor: 'background.default' }}>
             {/* Header */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <IconButton onClick={() => navigate('/dashboard')} sx={{ color: '#2e7d32', mr: 2 }}>
+                <IconButton onClick={() => navigate('/dashboard')} sx={{ color: 'primary.main', mr: 2 }}>
                     <ArrowBackIcon fontSize="large" />
                 </IconButton>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1b5e20' }}>Inventory Management</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>Inventory Management</Typography>
             </Box>
 
             {/* Parent Tabs */}
@@ -326,7 +338,7 @@ const Inventory = () => {
                     value={parentTab}
                     onChange={(e, v) => setParentTab(v)}
                     centered
-                    TabIndicatorProps={{ style: { backgroundColor: '#2e7d32', height: 4 } }}
+                    TabIndicatorProps={{ style: { backgroundColor: 'primary.main', height: 4 } }}
                 >
                     <CustomTab label="Inventory Stock" icon={<SearchIcon />} iconPosition="start" />
                     <CustomTab label="Add Inventory" icon={<AddCircleIcon />} iconPosition="start" />
@@ -340,7 +352,7 @@ const Inventory = () => {
                     onChange={(e, v) => setCategoryTab(v)}
                     textColor="secondary"
                     indicatorColor="secondary"
-                    sx={{ '& .MuiTab-root': { color: '#555' }, '& .Mui-selected': { color: '#000' } }}
+                    sx={{ '& .MuiTab-root': { color: 'text.secondary' }, '& .Mui-selected': { color: 'text.primary' } }}
                 >
                     <Tab label="Paddy" value="paddy" />
                     <Tab label="Equipment" value="equipment" />
@@ -436,6 +448,14 @@ const Inventory = () => {
                     <Button onClick={handleEditSubmit} variant="contained" color="success">Save</Button>
                 </DialogActions>
             </Dialog>
+
+            <ConfirmationDialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Delete Item"
+                content="Are you sure you want to delete this item? This action cannot be undone."
+            />
         </Box>
     );
 };

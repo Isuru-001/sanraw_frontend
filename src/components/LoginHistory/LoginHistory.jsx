@@ -4,10 +4,14 @@ import { Box, Typography, IconButton, Paper, Container, Link } from '@mui/materi
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { toast } from 'react-toastify';
+import ConfirmationDialog from '../common/ConfirmationDialog';
 
 const LoginHistory = () => {
     const navigate = useNavigate();
     const [history, setHistory] = useState([]);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [actionType, setActionType] = useState(''); // 'single' or 'all'
+    const [itemToDelete, setItemToDelete] = useState(null);
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
     const fetchHistory = async () => {
@@ -31,36 +35,50 @@ const LoginHistory = () => {
         fetchHistory();
     }, []);
 
-    const handleDelete = async (id) => {
-        const token = localStorage.getItem('token');
-        try {
-            const response = await fetch(`${API_URL}/users/history/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                setHistory(history.filter(item => item.id !== id));
-                toast.success("Record deleted");
-            }
-        } catch (error) {
-            toast.error("Failed to delete record");
-        }
+    const handleDeleteClick = (id) => {
+        setItemToDelete(id);
+        setActionType('single');
+        setDeleteDialogOpen(true);
     };
 
-    const handleClearHistory = async () => {
+    const handleClearHistoryClick = () => {
+        setActionType('all');
+        setDeleteDialogOpen(true);
+    };
+
+    const handleConfirmAction = async () => {
         const token = localStorage.getItem('token');
-        try {
-            const response = await fetch(`${API_URL}/users/history`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                setHistory([]);
-                toast.success("History cleared");
+
+        if (actionType === 'single') {
+            try {
+                const response = await fetch(`${API_URL}/users/history/${itemToDelete}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    setHistory(history.filter(item => item.id !== itemToDelete));
+                    toast.success("Record deleted");
+                }
+            } catch (error) {
+                toast.error("Failed to delete record");
             }
-        } catch (error) {
-            toast.error("Failed to clear history");
+        } else if (actionType === 'all') {
+            try {
+                const response = await fetch(`${API_URL}/users/history`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    setHistory([]);
+                    toast.success("History cleared");
+                }
+            } catch (error) {
+                toast.error("Failed to clear history");
+            }
         }
+        setDeleteDialogOpen(false);
+        setItemToDelete(null);
+        setActionType('');
     };
 
     const formatDate = (dateString) => {
@@ -80,7 +98,7 @@ const LoginHistory = () => {
             {/* Back Arrow */}
             <IconButton
                 onClick={() => navigate('/profile')}
-                sx={{ position: 'absolute', top: -10, left: -20, color: '#333' }}
+                sx={{ position: 'absolute', top: -10, left: -20, color: 'text.primary' }}
             >
                 <ArrowBackIcon sx={{ fontSize: 30 }} />
             </IconButton>
@@ -91,7 +109,7 @@ const LoginHistory = () => {
 
             <Paper elevation={0} sx={{ p: 2, bgcolor: 'transparent' }}>
                 {/* Header */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #ddd', pb: 2, mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: 1, borderColor: 'divider', pb: 2, mb: 2 }}>
                     <Typography sx={{ fontWeight: 'bold', width: '30%', textAlign: 'center' }}>Last Login Date</Typography>
                     <Typography sx={{ fontWeight: 'bold', width: '30%', textAlign: 'center' }}>Login Time</Typography>
                     <Typography sx={{ fontWeight: 'bold', width: '30%', textAlign: 'center' }}>Logout Time</Typography>
@@ -100,17 +118,17 @@ const LoginHistory = () => {
 
                 {/* List */}
                 {history.map((item) => (
-                    <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0', py: 2 }}>
-                        <Typography sx={{ width: '30%', textAlign: 'center', color: '#555' }}>
+                    <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2 }}>
+                        <Typography sx={{ width: '30%', textAlign: 'center', color: 'text.secondary' }}>
                             {formatDate(item.login_time)}
                         </Typography>
-                        <Typography sx={{ width: '30%', textAlign: 'center', color: '#555' }}>
+                        <Typography sx={{ width: '30%', textAlign: 'center', color: 'text.secondary' }}>
                             {formatTime(item.login_time)}
                         </Typography>
-                        <Typography sx={{ width: '30%', textAlign: 'center', color: '#555' }}>
+                        <Typography sx={{ width: '30%', textAlign: 'center', color: 'text.secondary' }}>
                             {item.logout_time ? formatTime(item.logout_time) : '-'}
                         </Typography>
-                        <IconButton onClick={() => handleDelete(item.id)} sx={{ color: '#2E8B57' }}>
+                        <IconButton onClick={() => handleDeleteClick(item.id)} sx={{ color: 'primary.main' }}>
                             <DeleteOutlineIcon />
                         </IconButton>
                     </Box>
@@ -125,13 +143,21 @@ const LoginHistory = () => {
                 <Link
                     component="button"
                     variant="body1"
-                    onClick={handleClearHistory}
+                    onClick={handleClearHistoryClick}
                     underline="hover"
-                    sx={{ color: '#2E8B57', fontSize: '1.1rem' }}
+                    sx={{ color: 'primary.main', fontSize: '1.1rem' }}
                 >
                     Clear My History
                 </Link>
             </Box>
+
+            <ConfirmationDialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleConfirmAction}
+                title={actionType === 'all' ? "Clear History" : "Delete Record"}
+                content={actionType === 'all' ? "Are you sure you want to clear all login history?" : "Are you sure you want to delete this record?"}
+            />
         </Container>
     );
 };

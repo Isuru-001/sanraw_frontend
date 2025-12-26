@@ -8,19 +8,20 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'; // Fallback i
 import EmployeeDetailsModal from './EmployeeDetailsModal';
 import CreateAccount from './CreateAccount';
 import { toast } from 'react-toastify';
-import { styled } from '@mui/system';
+import { styled, useTheme } from '@mui/system';
+import ConfirmationDialog from '../common/ConfirmationDialog';
 
-const StyledTab = styled(Tab)({
+const StyledTab = styled(Tab)(({ theme }) => ({
     textTransform: 'none',
     fontWeight: 'bold',
     fontSize: '1rem',
-    color: '#aaa',
+    color: theme.palette.text.secondary,
     '&.Mui-selected': {
-        color: '#4CAF50',
+        color: theme.palette.primary.main,
     },
-});
+}));
 
-const StatusDot = styled(Box)(({ status }) => ({
+const StatusDot = styled(Box)(({ theme, status }) => ({
     width: 12,
     height: 12,
     borderRadius: '50%',
@@ -28,17 +29,20 @@ const StatusDot = styled(Box)(({ status }) => ({
     position: 'absolute',
     bottom: 2,
     right: 2,
-    border: '2px solid white'
+    border: `2px solid ${theme.palette.background.paper}`
 }));
 
 const Employees = () => {
     const navigate = useNavigate();
+    const theme = useTheme();
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [tabValue, setTabValue] = useState(0);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [employeeToDelete, setEmployeeToDelete] = useState(null);
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -85,25 +89,33 @@ const Employees = () => {
         setSelectedEmployee(null);
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this account?")) return;
+    const handleDeleteClick = (id) => {
+        setEmployeeToDelete(id);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!employeeToDelete) return;
 
         const token = localStorage.getItem('token');
         try {
-            const response = await fetch(`${API_URL}/users/${id}`, {
+            const response = await fetch(`${API_URL}/users/${employeeToDelete}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (response.ok) {
                 toast.success("Account deleted");
-                setEmployees(employees.filter(emp => emp.id !== id));
+                setEmployees(employees.filter(emp => emp.id !== employeeToDelete));
                 handleCloseModal();
             } else {
                 toast.error("Failed to delete account");
             }
         } catch (error) {
             toast.error("Error deleting account");
+        } finally {
+            setDeleteDialogOpen(false);
+            setEmployeeToDelete(null);
         }
     };
 
@@ -144,7 +156,7 @@ const Employees = () => {
             </Box>
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                <Tabs value={tabValue} onChange={handleTabChange} centered TabIndicatorProps={{ style: { backgroundColor: '#4CAF50' } }}>
+                <Tabs value={tabValue} onChange={handleTabChange} centered TabIndicatorProps={{ style: { backgroundColor: theme.palette.primary.main } }}>
                     <StyledTab label="View All Accounts" />
                     <StyledTab label="Create New Accounts" />
                 </Tabs>
@@ -161,12 +173,12 @@ const Employees = () => {
                             onChange={handleSearchChange}
                             sx={{
                                 width: '70%',
-                                '& .MuiOutlinedInput-root': { borderRadius: '20px', border: '1px solid #98FB98' }
+                                '& .MuiOutlinedInput-root': { borderRadius: '20px', border: `1px solid ${theme.palette.primary.light}` }
                             }}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <SearchIcon sx={{ color: '#aaa' }} />
+                                        <SearchIcon sx={{ color: 'text.secondary' }} />
                                     </InputAdornment>
                                 ),
                                 endAdornment: searchTerm && (
@@ -176,7 +188,7 @@ const Employees = () => {
                                 )
                             }}
                         />
-                        <Button sx={{ color: '#4CAF50', textTransform: 'none', fontWeight: 'bold' }}>View All</Button>
+                        <Button sx={{ color: 'primary.main', textTransform: 'none', fontWeight: 'bold' }}>View All</Button>
                     </Box>
 
                     {loading ? <CircularProgress sx={{ display: 'block', mx: 'auto' }} /> : (
@@ -188,14 +200,14 @@ const Employees = () => {
                                     sx={{
                                         display: 'flex', alignItems: 'center', mb: 2, p: 1,
                                         cursor: 'pointer', borderRadius: '10px',
-                                        '&:hover': { bgcolor: '#f0fdf4' }
+                                        '&:hover': { bgcolor: 'action.hover' }
                                     }}
                                 >
                                     <Box sx={{ position: 'relative', mr: 3 }}>
                                         <Avatar src={emp.profile_image} sx={{ width: 50, height: 50 }} />
                                         <StatusDot status={emp.status} />
                                     </Box>
-                                    <Typography sx={{ fontSize: '1.1rem', fontWeight: 500, color: '#333' }}>
+                                    <Typography sx={{ fontSize: '1.1rem', fontWeight: 500, color: 'text.primary' }}>
                                         {emp.first_name} {emp.last_name || `Employee ${emp.id}`}
                                     </Typography>
                                 </Box>
@@ -221,7 +233,15 @@ const Employees = () => {
                 employee={selectedEmployee}
                 onViewHistory={handleViewHistory}
                 onEdit={handleEdit}
-                onDelete={handleDelete}
+                onDelete={handleDeleteClick}
+            />
+
+            <ConfirmationDialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Delete Account"
+                content="Are you sure you want to delete this account? This action cannot be undone."
             />
 
         </Container>

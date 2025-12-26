@@ -13,13 +13,13 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
     width: '90%',
     margin: '40px auto',
     boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-    border: '2px solid #98FB98',
+    border: `2px solid ${theme.palette.primary.light}`,
 }));
 
 const DetailRow = ({ label, value }) => (
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, borderBottom: '1px solid #f0f0f0', pb: 1 }}>
-        <Typography sx={{ fontWeight: 'bold', color: '#333', minWidth: '200px' }}>{label}:</Typography>
-        <Typography sx={{ color: '#555', flexGrow: 1, textAlign: 'left' }}>{value || 'Not set'}</Typography>
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+        <Typography sx={{ fontWeight: 'bold', color: 'text.primary', minWidth: '200px' }}>{label}:</Typography>
+        <Typography sx={{ color: 'text.secondary', flexGrow: 1, textAlign: 'left' }}>{value || 'Not set'}</Typography>
     </Box>
 );
 
@@ -146,11 +146,11 @@ const Profile = () => {
     if (loading) return <CircularProgress sx={{ display: 'block', margin: 'auto', mt: 5 }} />;
 
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'white', p: 3, position: 'relative' }}>
+        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', p: 3, position: 'relative' }}>
             {/* Back Arrow */}
             <IconButton
                 onClick={() => navigate('/dashboard')}
-                sx={{ position: 'absolute', top: 20, left: 20, color: '#333' }}
+                sx={{ position: 'absolute', top: 20, left: 20, color: 'text.primary' }}
             >
                 <ArrowBackIcon sx={{ fontSize: 30 }} />
             </IconButton>
@@ -160,17 +160,17 @@ const Profile = () => {
                 <Box sx={{ position: 'relative' }}>
                     <Avatar
                         src={user?.profile_image}
-                        sx={{ width: 120, height: 120, border: '4px solid #fff', boxShadow: 3 }}
+                        sx={{ width: 120, height: 120, border: 4, borderColor: 'background.paper', boxShadow: 3 }}
                     />
                     <Box
                         sx={{
                             position: 'absolute', bottom: 0, right: 0,
-                            bgcolor: 'white', borderRadius: '50%', p: 0.5,
-                            boxShadow: 1, cursor: 'pointer', border: '1px solid #98FB98'
+                            bgcolor: 'background.paper', borderRadius: '50%', p: 0.5,
+                            boxShadow: 1, cursor: 'pointer', border: 1, borderColor: 'primary.light'
                         }}
                         onClick={triggerFileInput}
                     >
-                        {uploading ? <CircularProgress size={20} /> : <PhotoCamera sx={{ color: '#2E8B57' }} />}
+                        {uploading ? <CircularProgress size={20} /> : <PhotoCamera sx={{ color: 'primary.main' }} />}
                     </Box>
                     <input
                         type="file"
@@ -183,7 +183,7 @@ const Profile = () => {
                 <Typography variant="h4" sx={{ mt: 2, fontWeight: 'bold' }}>
                     {user?.first_name} {user?.last_name}
                 </Typography>
-                <Typography variant="subtitle1" sx={{ color: '#888' }}>
+                <Typography variant="subtitle1" sx={{ color: 'text.secondary' }}>
                     {user?.role ? user?.role.toUpperCase() : 'USER'}
                 </Typography>
             </Box>
@@ -202,10 +202,10 @@ const Profile = () => {
                     variant="contained"
                     onClick={handleEditOpen}
                     sx={{
-                        bgcolor: '#98FB98', color: 'white', borderRadius: '25px',
+                        bgcolor: 'primary.light', color: 'white', borderRadius: '25px',
                         fontSize: '1.2rem', textTransform: 'none', px: 4, py: 1,
                         boxShadow: 'none',
-                        '&:hover': { bgcolor: '#7ddba4' }
+                        '&:hover': { bgcolor: 'primary.main' }
                     }}
                 >
                     Edit Profile
@@ -214,10 +214,10 @@ const Profile = () => {
                     variant="contained"
                     onClick={() => navigate('/login-history')}
                     sx={{
-                        bgcolor: '#98FB98', color: 'white', borderRadius: '25px',
+                        bgcolor: 'primary.light', color: 'white', borderRadius: '25px',
                         fontSize: '1.2rem', textTransform: 'none', px: 4, py: 1,
                         boxShadow: 'none',
-                        '&:hover': { bgcolor: '#7ddba4' }
+                        '&:hover': { bgcolor: 'primary.main' }
                     }}
                 >
                     My Login History
@@ -271,7 +271,7 @@ const Profile = () => {
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>
                     <Button onClick={handleEditClose} color="inherit">Cancel</Button>
-                    <Button onClick={handleSaveProfile} variant="contained" sx={{ bgcolor: '#98FB98', color: 'white', '&:hover': { bgcolor: '#7ddba4' } }}>
+                    <Button onClick={handleSaveProfile} variant="contained" sx={{ bgcolor: 'primary.light', color: 'white', '&:hover': { bgcolor: 'primary.main' } }}>
                         Save Changes
                     </Button>
                 </DialogActions>
