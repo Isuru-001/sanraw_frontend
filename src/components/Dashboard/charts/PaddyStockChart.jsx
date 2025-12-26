@@ -14,7 +14,7 @@ import { Box, Typography } from '@mui/material';
 const PaddyStockChart = ({ data }) => {
     if (!data || data.length === 0) {
         return (
-            <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Typography variant="body2" color="text.secondary">No paddy stock data</Typography>
             </Box>
         );

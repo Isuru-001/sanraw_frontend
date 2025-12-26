@@ -22,14 +22,10 @@ import {
     DialogContent,
     TextField,
     InputAdornment,
-    List as MuiList,
-    ListItem,
-    ListItemText,
     Badge,
     Menu,
     MenuItem,
     Switch,
-    FormControlLabel,
     Divider
 } from '@mui/material';
 import {
@@ -377,42 +373,84 @@ const Dashboard = () => {
                     </Box>
 
                     {/* Charts Grid */}
+                    {/* Charts Grid */}
                     <ChartsShell sx={{ mb: 6 }}>
-                        <Grid container spacing={4} alignItems="center" sx={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexDirection: 'row' }}>
-                            <Grid item xs={12} md={4}>
-                                <Box sx={{ textAlign: 'center', height: '100%', width: '100%' }}>
-                                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: 'text.primary' }}>
-                                        Sales Growth (This Month)
-                                    </Typography>
-                                    <Box sx={{ height: 350 }}>
-                                        <SalesGrowthChart data={salesTrend} />
-                                    </Box>
+                        <Box
+                            sx={{
+                                height: '100%',
+                                width: '100%',
+                                display: 'flex',
+                                flexDirection: { xs: 'column', md: 'row' },
+                                justifyContent: 'space-between',
+                                alignItems: 'stretch',
+                            }}
+                        >
+                            {/* Sales Growth */}
+                            <Box
+                                sx={{
+                                    flex: 1,
+                                    textAlign: 'center',
+                                    px: 2,
+                                    mb: { xs: 4, md: 0 },
+                                }}
+                            >
+                                <Typography
+                                    variant="h6"
+                                    fontWeight="bold"
+                                    sx={{ mb: 2, color: 'text.primary' }}
+                                >
+                                    Sales Growth (This Month)
+                                </Typography>
+                                <Box sx={{ height: 350 }}>
+                                    <SalesGrowthChart data={salesTrend} />
                                 </Box>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} md={4} sx={{ borderLeft: { md: `1px solid ${theme.palette.divider}` }, borderRight: { md: `1px solid ${theme.palette.divider}` } }}>
-                                <Box sx={{ textAlign: 'center', height: '100%', width: '100%' }}>
-                                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: 'text.primary' }}>
-                                        Paddy Stock Levels
-                                    </Typography>
-                                    <Box sx={{ height: 350 }}>
-                                        <PaddyStockChart data={paddyStock} />
-                                    </Box>
+                            {/* Paddy Stock */}
+                            <Box
+                                sx={{
+                                    flex: 1,
+                                    textAlign: 'center',
+                                    px: 2,
+                                    mb: { xs: 4, md: 0 },
+                                    borderLeft: { md: `1px solid ${theme.palette.divider}` },
+                                    borderRight: { md: `1px solid ${theme.palette.divider}` },
+                                }}
+                            >
+                                <Typography
+                                    variant="h6"
+                                    fontWeight="bold"
+                                    sx={{ mb: 2, color: 'text.primary' }}
+                                >
+                                    Paddy Stock Levels
+                                </Typography>
+                                <Box sx={{ height: 350 }}>
+                                    <PaddyStockChart data={paddyStock} />
                                 </Box>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} md={4}>
-                                <Box sx={{ textAlign: 'center', height: '100%', width: '100%' }}>
-                                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: 'text.primary' }}>
-                                        Inventory Value Summary
-                                    </Typography>
-                                    <Box sx={{ height: 350 }}>
-                                        <InventorySummaryChart data={inventorySummary} />
-                                    </Box>
+                            {/* Inventory Summary */}
+                            <Box
+                                sx={{
+                                    flex: 1,
+                                    textAlign: 'center',
+                                    px: 2,
+                                }}
+                            >
+                                <Typography
+                                    variant="h6"
+                                    fontWeight="bold"
+                                    sx={{ mb: 2, color: 'text.primary' }}
+                                >
+                                    Inventory Value Summary
+                                </Typography>
+                                <Box sx={{ height: 350 }}>
+                                    <InventorySummaryChart data={inventorySummary} />
                                 </Box>
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Box>
                     </ChartsShell>
+
 
                     {/* Quick Access Navigation */}
                     <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, color: 'text.primary' }}>
