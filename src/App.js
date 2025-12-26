@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Login from './components/Login/Login';
 import Signup from './components/Signup/Signup';
 import ForgotPassword from './components/ForgotPassword/ForgotPassword';
+import ResetPassword from './components/ResetPassword/ResetPassword';
 import Dashboard from './components/Dashboard/Dashboard';
 import Sales from './components/Sales/Sales';
 import Inventory from './components/Inventory/Inventory';
@@ -41,6 +42,7 @@ function App() {
               <Route path="/" element={<Login />} />
               {/* <Route path="/signup" element={<Signup />} /> */}
               <Route path="/forgot" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
               <Route path="/activate/:token" element={<ActivateAccount />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/sales" element={<Sales />} />

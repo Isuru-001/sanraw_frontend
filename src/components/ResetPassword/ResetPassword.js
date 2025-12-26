@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { Box, Typography, TextField, Button, Link } from '@mui/material';
+import { Box, Typography, TextField, Button } from '@mui/material';
 import { styled } from '@mui/system';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const StyledWrapper = styled(Box)({
     display: 'flex',
@@ -47,43 +48,45 @@ const StyledInput = styled(TextField)({
     '& input': {
         textAlign: 'center',
         fontSize: '1.25rem',
-        color: '#A9A9A9', // Placeholder/text color similar to image
+        color: '#A9A9A9',
         padding: '12px 20px',
     },
 });
 
-const ForgotPassword = () => {
-    const [email, setEmail] = useState('');
-
+const ResetPassword = () => {
+    const { token } = useParams();
+    const navigate = useNavigate();
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!email) {
-            return toast.error("Please enter your email address");
+        if (!password || !confirmPassword) {
+            return toast.error("Please fill in all fields");
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return toast.error("Invalid email format");
+        if (password !== confirmPassword) {
+            return toast.error("Passwords do not match");
         }
 
         try {
-            const response = await fetch(`${API_URL}/auth/request-reset-password`, {
+            const response = await fetch(`${API_URL}/auth/reset-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ token, newPassword: password }),
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                toast.success(data.message || "Reset instructions sent to your email!");
+                toast.success("Password reset successful! Please login.");
+                navigate('/');
             } else {
-                toast.error(data.message || "Failed to send reset email");
+                toast.error(data.message || "Failed to reset password");
             }
         } catch (error) {
             console.error('Reset Password Error:', error);
@@ -95,19 +98,29 @@ const ForgotPassword = () => {
         <StyledWrapper>
             <StyledCard>
                 <Typography variant="h3" sx={{ fontWeight: 800, color: 'black', mb: 4 }}>
-                    Reset Your Password
+                    Set New Password
                 </Typography>
 
                 <Typography variant="h6" sx={{ color: 'black', mb: 6, fontWeight: 500, lineHeight: 1.5, maxWidth: '80%' }}>
-                    Enter Your Email Address below and We will send you instructions on how to reset your password
+                    Enter your new password below.
                 </Typography>
 
                 <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
                     <StyledInput
                         fullWidth
-                        placeholder="Enter Your Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        type="password"
+                        placeholder="New Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        sx={{ maxWidth: '400px' }}
+                    />
+
+                    <StyledInput
+                        fullWidth
+                        type="password"
+                        placeholder="Confirm Password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
                         sx={{ maxWidth: '400px' }}
                     />
 
@@ -130,16 +143,12 @@ const ForgotPassword = () => {
                             }
                         }}
                     >
-                        Send Reset Email
+                        Reset Password
                     </Button>
-
-                    <Link href="/" underline="hover" sx={{ color: '#2E8B57', fontSize: '1.25rem', fontWeight: 600 }}>
-                        Go Back
-                    </Link>
                 </Box>
             </StyledCard>
         </StyledWrapper>
     );
 };
 
-export default ForgotPassword;
+export default ResetPassword;
